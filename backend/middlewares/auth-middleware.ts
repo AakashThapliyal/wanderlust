@@ -6,29 +6,43 @@ import { Role } from '../types/role-type.js';
 import User from '../models/user.js';
 
 import { Request, Response, NextFunction } from 'express';
-import { ObjectId } from 'mongoose';
 
 interface JwtPayload {
-  id: ObjectId;
+  _id: string;
 }
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  const token = await req.cookies.access_token;
+export const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.cookies?.access_token;
+
+  // Check whether the access token exists
   if (!token) {
     return next(
       new ApiError({
-        status: HTTP_STATUS.BAD_REQUEST,
+        status: HTTP_STATUS.UNAUTHORIZED,
         message: RESPONSE_MESSAGES.USERS.RE_LOGIN,
       })
     );
   }
 
+  let decoded: JwtPayload;
+
+  // Verify JWT token
   try {
-    const { id } = jwt.verify(token, JWT_SECRET as string) as JwtPayload;
-    req.user = await User.findById(id);
-    next();
-  } catch (error: any) {
-    console.log('Token verification error:', error);
+    decoded = jwt.verify(token, JWT_SECRET as string) as JwtPayload;
+
+    if (!decoded._id) {
+      return next(
+        new ApiError({
+          status: HTTP_STATUS.FORBIDDEN,
+          message: RESPONSE_MESSAGES.USERS.INVALID_TOKEN,
+        })
+      );
+    }
+  } catch (error) {
     return next(
       new ApiError({
         status: HTTP_STATUS.FORBIDDEN,
@@ -36,15 +50,45 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       })
     );
   }
+
+  // Find the user associated with the token
+  try {
+    const user = await User.findById(decoded._id);
+
+    if (!user) {
+      return next(
+        new ApiError({
+          status: HTTP_STATUS.UNAUTHORIZED,
+          message: RESPONSE_MESSAGES.USERS.RE_LOGIN,
+        })
+      );
+    }
+
+    // Attach authenticated user to request
+    req.user = user;
+
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 };
 
-export const isAdminMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  const role = req.user.role;
+// Admin authorization middleware
+export const isAdminMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const role = req.user?.role;
+
   if (role !== Role.Admin) {
-    return new ApiError({
-      status: HTTP_STATUS.UNAUTHORIZED,
-      message: RESPONSE_MESSAGES.USERS.UNAUTHORIZED_USER,
-    });
+    return next(
+      new ApiError({
+        status: HTTP_STATUS.UNAUTHORIZED,
+        message: RESPONSE_MESSAGES.USERS.UNAUTHORIZED_USER,
+      })
+    );
   }
-  next();
+
+  return next();
 };

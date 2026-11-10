@@ -13,6 +13,8 @@ const REFRESH_COOKIE_MAXAGE = process.env.REFRESH_COOKIE_MAXAGE;
 const ACCESS_TOKEN_EXPIRES_IN: TokenExpiry = process.env.ACCESS_TOKEN_EXPIRES_IN as TokenExpiry;
 const REFRESH_TOKEN_EXPIRES_IN: TokenExpiry = process.env.REFRESH_TOKEN_EXPIRES_IN as TokenExpiry;
 const JWT_SECRET: string = process.env.JWT_SECRET ?? throwError('JWT_SECRET is not defined');
+const SESSION_SECRET: string =
+  process.env.SESSION_SECRET ?? throwError('SESSION_SECRET is not defined');
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const NODE_ENV = process.env.NODE_ENV;
 
@@ -32,6 +34,7 @@ export {
   REFRESH_COOKIE_MAXAGE,
   REFRESH_TOKEN_EXPIRES_IN,
   JWT_SECRET,
+  SESSION_SECRET,
   FRONTEND_URL,
   NODE_ENV,
   GOOGLE_CLIENT_ID,

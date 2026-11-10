@@ -8,7 +8,7 @@ import userRouter from './routes/user.js';
 import errorMiddleware from './middlewares/error-middleware.js';
 import passport from './config/passport.js';
 import session from 'express-session';
-import { FRONTEND_URL } from './config/utils.js';
+import { FRONTEND_URL, SESSION_SECRET } from './config/utils.js';
 
 const app = express();
 
@@ -23,7 +23,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(compression());
-app.use(session({ secret: 'secret', resave: false, saveUninitialized: false }));
+app.use(
+  session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 
