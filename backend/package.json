@@ -44,7 +44,8 @@
     "dev": "nodemon --exec \"npx tsx\" server.ts",
     "check": "prettier --check .",
     "format": "prettier --write .",
-    "vercel-build": "echo yay"
+    "vercel-build": "echo yay",
+    "test:ci": "node --import tsx --test ci-tests/*.test.ts"
   },
   "jest": {
     "globalTeardown": "./tests/teardown",
